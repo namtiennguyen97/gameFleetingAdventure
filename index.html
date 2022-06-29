@@ -7,7 +7,8 @@
         body {
             display: block;
             margin: 0;
-            overflow: hidden
+            overflow: hidden;
+            /*height: 500vh;*/
         }
     </style>
 </head>
@@ -15,19 +16,32 @@
 <div style="display: none">
     <img id="terran1" src="model/terran/terran1.png">
     <img id="terran2" src="model/terran/terran2.png">
+    <img id="terran3" src="model/terran/terran3.png">
+    <img id="terran4" src="model/terran/terran4.png">
+    <img id="terran5" src="model/terran/terran5.png">
+
+    <img id="background1" src="model/background/background.png">
 </div>
 <canvas></canvas>
 <div style="display: none">
 
 </div>
 <script>
+    //các mẫu đất terran
     const terranModel1 = document.getElementById('terran1');
     const terranModel2 = document.getElementById('terran2');
+    const terranModel3 = document.getElementById('terran3');
+    const terranModel4 = document.getElementById('terran4');
+    const terranModel5 = document.getElementById('terran5');
+
+    const backgroundModel1 = document.getElementById('background1');
+
     const canvas = document.querySelector('canvas');
     const c = canvas.getContext('2d');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight
     const gravity = 1.5;
+    const terranLandPosition = canvas.height - 110;
 
     class Player {
         constructor() {
@@ -62,14 +76,15 @@
             if (this.postion.y + this.heigth + this.velocity.y <= canvas.height) {
                 this.velocity.y += gravity
             } else {
-                this.velocity.y = 0
+                // this.velocity.y = 0
             }
         }
 
     }
+
     class Terran {
-        constructor(x,y, imageModel) {
-            this.position =  {
+        constructor(x, y, imageModel) {
+            this.position = {
                 x,
                 y
             }
@@ -79,24 +94,52 @@
             this.height = imageModel.height;
 
         }
-        draw(){
+
+        draw() {
             // c.fillStyle = 'gray';
             // c.fillRect(this.position.x, this.position.y, this.width, this.height)
             c.drawImage(this.imageMl, this.position.x, this.position.y)
         }
     }
-    const player = new Player();
-    const terrans = [new Terran(0,530, terranModel1), new Terran(terranModel1.width,530, terranModel2)];
+
+    class Background {
+        constructor(x, y, imageModel) {
+            this.position = {
+                x,
+                y
+            }
+            // kich thuoc
+            this.imageMl = imageModel
+            this.width = imageModel.width;
+            this.height = imageModel.height;
+
+        }
+
+        draw() {
+            // c.fillStyle = 'gray';
+            // c.fillRect(this.position.x, this.position.y, this.width, this.height)
+            c.drawImage(this.imageMl, this.position.x, this.position.y)
+        }
+    }
 
 
-    const keys = {
+    let player = new Player();
+    let terrans = [new Terran(0, terranLandPosition, terranModel1), new Terran(terranModel1.width, terranLandPosition, terranModel2),
+        new Terran(terranModel1.width + terranModel2.width, terranLandPosition, terranModel3),
+        new Terran(terranModel1.width + terranModel2.width + terranModel3.width, terranLandPosition, terranModel4),
+        new Terran(terranModel1.width + terranModel2.width + terranModel3.width + terranModel4.width, terranLandPosition, terranModel5),
+        new Terran(terranModel1.width + terranModel2.width + terranModel3.width + terranModel4.width + terranModel5.width + 100, terranLandPosition, terranModel5)];
+
+    let backgrounds = [new Background(0, 0, backgroundModel1)];
+
+    let keys = {
         right: {
             isPress: false
         },
         left: {
             isPress: false
         },
-        up : {
+        up: {
             isPress: false
         }
     };
@@ -104,49 +147,88 @@
     let scrollToEndGame = 0;
 
     function animate() {
-        console.log(terranModel1.width)
         requestAnimationFrame(animate);
         c.fillStyle = 'white'
         // xóa hình ảnh cũ khi trôi xuống - clearRect : vị trí x, vị trí y, số lượng width cần xóa, số lượng y cần xóa
         c.clearRect(0, 0, canvas.width, canvas.height)
 
-        terrans.forEach(terran =>{
+        backgrounds.forEach(background => {
+            background.draw()
+        })
+
+        terrans.forEach(terran => {
             terran.draw();
         })
         player.update();
         // kich hoat chuyen dong
-        if(keys.right.isPress && player.postion.x < 600){
+        if (keys.right.isPress && player.postion.x < 600) {
             player.velocity.x = 10
-        }
-        else if(keys.left.isPress && player.postion.x > 300){
+        } else if (keys.left.isPress && player.postion.x > 300) {
             player.velocity.x = -10
         } else {
             player.velocity.x = 0;
-            terrans.forEach(terran =>{
-                if(keys.right.isPress){
-                    scrollToEndGame += 10;
+            if (keys.right.isPress) {
+                scrollToEndGame += 10;
+                terrans.forEach(terran => {
                     terran.position.x -= 10
-                } else if(keys.left.isPress){
-                    scrollToEndGame -= 10
-                    terran.position.x += 10
-                }
-            })
+                })
+                backgrounds.forEach(background => {
+                    background.position.x -= 1
+                })
+            } else if (keys.left.isPress) {
+                scrollToEndGame -= 10
+                terrans.forEach(terran => {
+                    terran.position.x += 10;
+                })
+                backgrounds.forEach(background => {
+                    background.position.x += 1
+                })
+            }
         }
 
         // nhảy lên và tương tác với môi trường terran
-        terrans.forEach(terran =>{
-            if(player.postion.y + player.heigth <= terran.position.y
+        terrans.forEach(terran => {
+            if (player.postion.y + player.heigth <= terran.position.y
                 && player.postion.y + player.heigth + player.velocity.y >= terran.position.y
                 && player.postion.x + player.width >= terran.position.x
                 && player.postion.x <= terran.width + terran.position.x
-            ){
+            ) {
                 player.velocity.y = 0
             }
         })
         //win van game
-        if(scrollToEndGame > 2000){
-           console.log('u won')
+        if (scrollToEndGame > 2000) {
+            console.log('u won')
         }
+        //lose
+        if (player.postion.y > canvas.height) {
+            resetTheGameIfLose()
+        }
+    }
+
+    function resetTheGameIfLose() {
+        player = new Player();
+        terrans = [new Terran(0, terranLandPosition, terranModel1), new Terran(terranModel1.width, terranLandPosition, terranModel2),
+            new Terran(terranModel1.width + terranModel2.width, terranLandPosition, terranModel3),
+            new Terran(terranModel1.width + terranModel2.width + terranModel3.width, terranLandPosition, terranModel4),
+            new Terran(terranModel1.width + terranModel2.width + terranModel3.width + terranModel4.width, terranLandPosition, terranModel5),
+            new Terran(terranModel1.width + terranModel2.width + terranModel3.width + terranModel4.width + terranModel5.width + 100, terranLandPosition, terranModel5)];
+
+        backgrounds = [new Background(0, 0, backgroundModel1)];
+
+        keys = {
+            right: {
+                isPress: false
+            },
+            left: {
+                isPress: false
+            },
+            up: {
+                isPress: false
+            }
+        };
+
+        scrollToEndGame = 0;
     }
 
     animate()
