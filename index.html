@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body {
+            display: block;
+            margin: 0;
+            overflow: hidden
+        }
+    </style>
+</head>
+<body>
+<div style="display: none">
+    <img id="terran1" src="model/terran/terran1.png">
+    <img id="terran2" src="model/terran/terran2.png">
+</div>
+<canvas></canvas>
+<div style="display: none">
+
+</div>
+<script>
+    const terranModel1 = document.getElementById('terran1');
+    const terranModel2 = document.getElementById('terran2');
+    const canvas = document.querySelector('canvas');
+    const c = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight
+    const gravity = 1.5;
+
+    class Player {
+        constructor() {
+            //vị trí
+            this.postion = {
+                x: 100,
+                y: 100
+            };
+
+            //kích thước object
+            this.width = 50;
+            this.heigth = 50;
+
+
+            //tốc độ
+            this.velocity = {
+                x: 0,
+                y: 0
+            }
+        }
+
+        draw() {
+            c.fillStyle = 'black';
+            c.fillRect(this.postion.x, this.postion.y, this.width, this.heigth)
+        }
+
+        update() {
+            this.postion.x += this.velocity.x;
+            this.postion.y += this.velocity.y;
+            this.draw();
+            // trọng luwcj rơi xuống
+            if (this.postion.y + this.heigth + this.velocity.y <= canvas.height) {
+                this.velocity.y += gravity
+            } else {
+                this.velocity.y = 0
+            }
+        }
+
+    }
+    class Terran {
+        constructor(x,y, imageModel) {
+            this.position =  {
+                x,
+                y
+            }
+            // kich thuoc
+            this.imageMl = imageModel
+            this.width = imageModel.width;
+            this.height = imageModel.height;
+
+        }
+        draw(){
+            // c.fillStyle = 'gray';
+            // c.fillRect(this.position.x, this.position.y, this.width, this.height)
+            c.drawImage(this.imageMl, this.position.x, this.position.y)
+        }
+    }
+    const player = new Player();
+    const terrans = [new Terran(0,530, terranModel1), new Terran(terranModel1.width,530, terranModel2)];
+
+
+    const keys = {
+        right: {
+            isPress: false
+        },
+        left: {
+            isPress: false
+        },
+        up : {
+            isPress: false
+        }
+    };
+
+    let scrollToEndGame = 0;
+
+    function animate() {
+        console.log(terranModel1.width)
+        requestAnimationFrame(animate);
+        c.fillStyle = 'white'
+        // xóa hình ảnh cũ khi trôi xuống - clearRect : vị trí x, vị trí y, số lượng width cần xóa, số lượng y cần xóa
+        c.clearRect(0, 0, canvas.width, canvas.height)
+
+        terrans.forEach(terran =>{
+            terran.draw();
+        })
+        player.update();
+        // kich hoat chuyen dong
+        if(keys.right.isPress && player.postion.x < 600){
+            player.velocity.x = 10
+        }
+        else if(keys.left.isPress && player.postion.x > 300){
+            player.velocity.x = -10
+        } else {
+            player.velocity.x = 0;
+            terrans.forEach(terran =>{
+                if(keys.right.isPress){
+                    scrollToEndGame += 10;
+                    terran.position.x -= 10
+                } else if(keys.left.isPress){
+                    scrollToEndGame -= 10
+                    terran.position.x += 10
+                }
+            })
+        }
+
+        // nhảy lên và tương tác với môi trường terran
+        terrans.forEach(terran =>{
+            if(player.postion.y + player.heigth <= terran.position.y
+                && player.postion.y + player.heigth + player.velocity.y >= terran.position.y
+                && player.postion.x + player.width >= terran.position.x
+                && player.postion.x <= terran.width + terran.position.x
+            ){
+                player.velocity.y = 0
+            }
+        })
+        //win van game
+        if(scrollToEndGame > 2000){
+           console.log('u won')
+        }
+    }
+
+    animate()
+
+    //move
+    addEventListener('keydown', function (event) {
+        switch (event.keyCode) {
+            case 65:
+                keys.left.isPress = true
+                break;
+            case 68:
+                keys.right.isPress = true
+                break;
+            case 87:
+                player.velocity.y = -30
+                break;
+        }
+    })
+    addEventListener('keyup', function (event) {
+        switch (event.keyCode) {
+            case 65:
+                keys.left.isPress = false
+                break;
+            case 68:
+                keys.right.isPress = false
+                break;
+        }
+    })
+</script>
+</body>
+</html>
